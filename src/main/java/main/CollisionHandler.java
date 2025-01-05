@@ -107,4 +107,45 @@ public class CollisionHandler {
 
         return itemIndex;
     }
+
+    public int checkEntity(Entity entity, Entity[] target) {
+        int entityIndex = -1;
+
+        for (int i = 0; i < target.length; i++) {
+            Entity targetEntity = target[i];
+            if (targetEntity != null) {
+                entity.solidArea.x += entity.worldX;
+                entity.solidArea.y += entity.worldY;
+                targetEntity.solidArea.x += targetEntity.worldX;
+                targetEntity.solidArea.y += targetEntity.worldY;
+
+                switch (entity.direction) {
+                    case "up":
+                        entity.solidArea.y -= entity.speed;
+                        break;
+                    case "down":
+                        entity.solidArea.y += entity.speed;
+                        break;
+                    case "left":
+                        entity.solidArea.x -= entity.speed;
+                        break;
+                    case "right":
+                        entity.solidArea.x += entity.speed;
+                        break;
+                }
+
+                if (entity.solidArea.intersects(targetEntity.solidArea)) {
+                    entity.isColliding = true;
+                    entityIndex = i;
+                }
+
+                entity.solidArea.x = entity.solidAreaDefaultX;
+                entity.solidArea.y = entity.solidAreaDefaultY;
+                targetEntity.solidArea.x = targetEntity.solidAreaDefaultX;
+                targetEntity.solidArea.y = targetEntity.solidAreaDefaultY;
+            }
+        }
+
+        return entityIndex;
+    }
 }

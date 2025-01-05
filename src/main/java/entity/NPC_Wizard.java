@@ -7,17 +7,16 @@ import java.util.Random;
 
 public class NPC_Wizard extends Entity {
 
-    int counter = 0;
-
     public NPC_Wizard(GamePanel gp_) {
         super(gp_);
 
         setSprites("npc_wizard", 3);
         setDefaultValues();
+        setDialogues();
     }
 
     public void setDefaultValues() {
-        speed = 2;
+        speed = 1;
         direction = "down";
         mainSprite = sprites[0][0];
 
@@ -26,21 +25,28 @@ public class NPC_Wizard extends Entity {
         solidAreaDefaultY = solidArea.y;
     }
 
+    public void setDialogues() {
+        dialogues[0] = "Whoa! Who are you?";
+        dialogues[1] = "Ohh.. I knew your father. What a brave \nmaster!";
+        dialogues[2] = "I'm not looking that old huh? Haha! Kid, \ni almost 130 years old.";
+        dialogues[3] = "Actually i knew your grandpa too but.. \nAnyway you had to help us!";
+    }
+
     public void update() {
         super.update();
 
         spriteCounter++;
         if (spriteCounter == 10) {
             spriteCounter = 0;
-            spriteIndex = (spriteIndex + 1) % 3; // Cycle through 8 sprites
+            spriteIndex = (spriteIndex + 1) % 3; // Cycle through 3 sprites
         }
     }
 
     public void setAction() {
         Random random = new Random();
 
-        if (counter == 120) {
-            counter = 0;
+        if (actionLockCounter == 120) {
+            actionLockCounter = 0;
             int direction = random.nextInt(4);
 
             switch (direction) {
@@ -58,6 +64,10 @@ public class NPC_Wizard extends Entity {
                     break;
             }
         }
-        counter++;
+        actionLockCounter++;
+    }
+
+    public void speak() {
+        super.speak();
     }
 }

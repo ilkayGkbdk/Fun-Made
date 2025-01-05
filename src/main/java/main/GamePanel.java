@@ -26,11 +26,14 @@ public class GamePanel extends JPanel implements Runnable {
     public Thread gameThread;
     private final int FPS = 60;
 
+    // States
+    public GameState mainState;
+
     // Game Elements
     public ImageLoader imageLoader = new ImageLoader(this);
     public UtilityTool uTool = new UtilityTool(this);
     public TileManager tileManager = new TileManager(this);
-    public KeyHandler keyHandler = new KeyHandler();
+    public KeyHandler keyHandler = new KeyHandler(this);
     public CollisionHandler collisionHandler = new CollisionHandler(this);
     public AssetSetter assetSetter = new AssetSetter(this);
     public UI ui = new UI(this);
@@ -42,7 +45,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     public GamePanel() {
         setPreferredSize(new Dimension(screenWidth, screenHeight));
-        setBackground(Color.PINK);
+        setBackground(Color.BLACK);
         setDoubleBuffered(true);
         addKeyListener(keyHandler);
         setFocusable(true);
@@ -51,6 +54,7 @@ public class GamePanel extends JPanel implements Runnable {
     public void setup() {
         assetSetter.setAssets();
         assetSetter.setEntities();
+        mainState = GameState.MAIN_MENU;
     }
 
     public void startGameThread() {
@@ -58,67 +62,77 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
+    public double avgFPS;
+    public double drawCount;
+
     @Override
     public void run() {
-        double drawInterval = 1000000000.0 / FPS;
-        double nextDrawTime = System.nanoTime() + drawInterval;
+        double drawInterval = (double) 1000000000 / FPS;
+        double delta = 0;
+        long lastTime = System.nanoTime();
+        long currentTime;
+        long timer = 0;
+        drawCount = 0;
 
         while (gameThread != null) {
-            update();
-            repaint();
+            currentTime = System.nanoTime();
 
-            try {
-                double remainingTime = nextDrawTime - System.nanoTime();
-                remainingTime = remainingTime / 1000000;
+            delta += (currentTime - lastTime) / drawInterval;
+            timer += (currentTime - lastTime);
+            lastTime = currentTime;
 
-                if (remainingTime < 0) {
-                    remainingTime = 0;
-                }
+            if (delta >= 1) {
+                update();
+                repaint();
+                delta--;
+                drawCount++;
+            }
 
-                Thread.sleep((long) remainingTime);
-
-                nextDrawTime += drawInterval;
-            } catch (InterruptedException e) {
-                e.fillInStackTrace();
+            if (timer >= 1000000000) {
+                avgFPS = drawCount;
+                drawCount = 0;
+                timer = 0;
             }
         }
     }
 
     public void update() {
-        // Update game state here
-        for (Entity entity : entities) {
-            if (entity != null) {
-                entity.update();
+        if (mainState == GameState.PLAY) {
+            player.update();
+
+            for (Entity entity : entities) {
+                if (entity != null) {
+                    entity.update();
+                }
             }
         }
-
-        player.update();
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        // Draw game elements here
 
-        // tiles
-        tileManager.draw(g2);
+        if (mainState != GameState.MAIN_MENU) {
+            // tiles
+            tileManager.draw(g2);
 
-        // items
-        for (SuperItem item : items) {
-            if (item != null) {
-                item.draw(g2);
+            // items
+            for (SuperItem item : items) {
+                if (item != null) {
+                    item.draw(g2);
+                }
             }
-        }
 
-        // entities
-        for (Entity entity : entities) {
-            if (entity != null) {
-                entity.draw(g2);
+            // entities
+            for (Entity entity : entities) {
+                if (entity != null) {
+                    entity.draw(g2);
+                }
             }
-        }
 
-        player.draw(g2);
+            player.draw(g2);
+        }
 
         // ui
         ui.draw(g2);

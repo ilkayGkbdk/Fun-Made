@@ -1,9 +1,9 @@
 package entity;
 
 import main.GamePanel;
+import main.GameState;
 
 import java.awt.*;
-import java.util.Objects;
 
 public class Player extends Entity{
 
@@ -48,8 +48,10 @@ public class Player extends Entity{
             }
 
             isColliding = gp.collisionHandler.checkTile(this);
-            int index = gp.collisionHandler.checkItem(this, true);
-            interactItem(index);
+            int itemIndex = gp.collisionHandler.checkItem(this, true);
+            int entityIndex = gp.collisionHandler.checkEntity(this, gp.entities);
+            pickUpItem(itemIndex);
+            interactEntity(entityIndex);
 
             super.move();
 
@@ -63,33 +65,20 @@ public class Player extends Entity{
         }
     }
 
-    public void interactItem(int index) {
+    public void pickUpItem(int index) {
         if (index != -1) {
-            if (Objects.equals(gp.items[index].name, "Key")) {
-                hasKey++;
-                gp.items[index] = null;
-                gp.ui.setMessage("Key collected!");
-            }
-            else if (Objects.equals(gp.items[index].name, "Door")) {
-                if (hasKey > 0) {
-                    hasKey--;
-                    gp.items[index] = null;
-                    gp.ui.setMessage("Door unlocked!");
-                }
-                else {
-                    gp.ui.setMessage("You need a key to unlock this door!");
-                }
-            }
-            else if (Objects.equals(gp.items[index].name, "Ring")) {
-                gp.player.speed += 2;
-                gp.items[index] = null;
-                gp.ui.setMessage("Speed increased!");
-            }
-            else if (Objects.equals(gp.items[index].name, "Chest")) {
-                gp.ui.isGameOver = true;
-                gp.gameThread = null;
+
+        }
+    }
+
+    public void interactEntity(int index) {
+        if (index != -1) {
+            if (gp.keyHandler.enterPressed) {
+                gp.mainState = GameState.DIALOGUE;
+                gp.entities[index].speak();
             }
         }
+        gp.keyHandler.enterPressed = false;
     }
 
     public void draw(Graphics2D g2) {

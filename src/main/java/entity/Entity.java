@@ -18,9 +18,14 @@ public class Entity {
     public int spriteIndex = 0;
     public int spriteCounter = 0;
 
+    public int actionLockCounter = 0;
+
     public boolean isColliding = false;
     public Rectangle solidArea;
     public int solidAreaDefaultX, solidAreaDefaultY;
+
+    public String[] dialogues = new String[10];
+    public int dialogueIndex = 0;
 
     public Entity(GamePanel gp_) {
         gp = gp_;
@@ -49,7 +54,8 @@ public class Entity {
         setAction();
 
         isColliding = gp.collisionHandler.checkTile(this);
-        int index = gp.collisionHandler.checkItem(this, false);
+        gp.collisionHandler.checkItem(this, false);
+        gp.collisionHandler.checkEntity(this, new Entity[]{gp.player});
 
         move();
         setMainSprite();
@@ -87,6 +93,35 @@ public class Entity {
                 break;
             case "right":
                 mainSprite = sprites[3][spriteIndex];
+                break;
+        }
+    }
+
+    public void setDialogues() {}
+
+    public void speak() {
+        faceToPlayer();
+        gp.ui.currentDialogue = dialogues[dialogueIndex];
+
+        dialogueIndex++;
+        if (dialogues[dialogueIndex] == null) {
+            dialogueIndex = 0;
+        }
+    }
+
+    private void faceToPlayer() {
+        switch (gp.player.direction) {
+            case "up":
+                direction = "down";
+                break;
+            case "down":
+                direction = "up";
+                break;
+            case "left":
+                direction = "right";
+                break;
+            case "right":
+                direction = "left";
                 break;
         }
     }
