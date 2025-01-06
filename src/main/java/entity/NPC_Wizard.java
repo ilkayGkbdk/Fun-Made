@@ -5,7 +5,7 @@ import main.GamePanel;
 import java.awt.*;
 import java.util.Random;
 
-public class NPC_Wizard extends Entity {
+public class NPC_Wizard extends Mob {
 
     public NPC_Wizard(GamePanel gp_) {
         super(gp_);

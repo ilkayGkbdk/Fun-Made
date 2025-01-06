@@ -15,8 +15,8 @@ public class AssetSetter {
     }
 
     public void setEntities() {
-        gp.entities[0] = new NPC_Wizard(gp);
-        gp.entities[0].worldX = gp.tileSize * 45;
-        gp.entities[0].worldY = gp.tileSize * 50;
+        gp.mobs[0] = new NPC_Wizard(gp);
+        gp.mobs[0].worldX = gp.tileSize * 45;
+        gp.mobs[0].worldY = gp.tileSize * 50;
     }
 }

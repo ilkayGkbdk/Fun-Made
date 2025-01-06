@@ -5,10 +5,9 @@ import main.GameState;
 
 import java.awt.*;
 
-public class Player extends Entity{
+public class Player extends Mob {
 
     public final int screenX, screenY;
-    public int hasKey = 0;
 
     public Player(GamePanel gp_) {
         super(gp_);
@@ -26,6 +25,9 @@ public class Player extends Entity{
         speed = 4;
         direction = "down";
         mainSprite = sprites[0][0];
+
+        maxLife = 8;
+        life = maxLife;
 
         solidArea = new Rectangle(8, 16, 16, 16);
         solidAreaDefaultX = solidArea.x;
@@ -49,9 +51,9 @@ public class Player extends Entity{
 
             isColliding = gp.collisionHandler.checkTile(this);
             int itemIndex = gp.collisionHandler.checkItem(this, true);
-            int entityIndex = gp.collisionHandler.checkEntity(this, gp.entities);
+            int mobIndex = gp.collisionHandler.checkMob(this, gp.mobs);
             pickUpItem(itemIndex);
-            interactEntity(entityIndex);
+            interactEntity(mobIndex);
 
             super.move();
 
@@ -75,7 +77,8 @@ public class Player extends Entity{
         if (index != -1) {
             if (gp.keyHandler.enterPressed) {
                 gp.mainState = GameState.DIALOGUE;
-                gp.entities[index].speak();
+                gp.mobs[index].speak();
+                life--;
             }
         }
         gp.keyHandler.enterPressed = false;

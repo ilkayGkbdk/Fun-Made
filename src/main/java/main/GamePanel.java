@@ -1,12 +1,16 @@
 package main;
 
 import entity.Entity;
+import entity.Mob;
 import entity.Player;
 import item.SuperItem;
 import tile.TileManager;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class GamePanel extends JPanel implements Runnable {
 
@@ -24,7 +28,11 @@ public class GamePanel extends JPanel implements Runnable {
 
     // Game Variables
     public Thread gameThread;
-    private final int FPS = 60;
+    private final double limit = 60d;
+    private final double updateRate = 1.0d / limit;
+    private long nextStatTime;
+    private int fps, ups;
+    public int avgFPS, avgUPS;
 
     // States
     public GameState mainState;
@@ -41,7 +49,8 @@ public class GamePanel extends JPanel implements Runnable {
     // Entities
     public Player player = new Player(this);
     public SuperItem[] items = new SuperItem[10];
-    public Entity[] entities = new Entity[10];
+    public Mob[] mobs = new Mob[10];
+    public ArrayList<Entity> entityList = new ArrayList<>();
 
     public GamePanel() {
         setPreferredSize(new Dimension(screenWidth, screenHeight));
@@ -62,36 +71,32 @@ public class GamePanel extends JPanel implements Runnable {
         gameThread.start();
     }
 
-    public double avgFPS;
-    public double drawCount;
-
     @Override
     public void run() {
-        double drawInterval = (double) 1000000000 / FPS;
-        double delta = 0;
-        long lastTime = System.nanoTime();
-        long currentTime;
-        long timer = 0;
-        drawCount = 0;
+        double accumulator = 0;
+        long currentTime, lastUpdate = System.currentTimeMillis();
+        nextStatTime = System.currentTimeMillis() + 1000;
 
         while (gameThread != null) {
-            currentTime = System.nanoTime();
+            currentTime = System.currentTimeMillis();
+            double lastRenderTimeInSeconds = (currentTime - lastUpdate) / 1000d;
+            accumulator += lastRenderTimeInSeconds;
+            lastUpdate = currentTime;
 
-            delta += (currentTime - lastTime) / drawInterval;
-            timer += (currentTime - lastTime);
-            lastTime = currentTime;
-
-            if (delta >= 1) {
+            while (accumulator > updateRate) {
                 update();
                 repaint();
-                delta--;
-                drawCount++;
+                accumulator -= updateRate;
+                ups++;
             }
 
-            if (timer >= 1000000000) {
-                avgFPS = drawCount;
-                drawCount = 0;
-                timer = 0;
+            fps++;
+            if (System.currentTimeMillis() > nextStatTime ) {
+                avgFPS = fps;
+                avgUPS = ups;
+                fps = 0;
+                ups = 0;
+                nextStatTime = System.currentTimeMillis() + 1000;
             }
         }
     }
@@ -100,9 +105,9 @@ public class GamePanel extends JPanel implements Runnable {
         if (mainState == GameState.PLAY) {
             player.update();
 
-            for (Entity entity : entities) {
-                if (entity != null) {
-                    entity.update();
+            for (Mob mob : mobs) {
+                if (mob != null) {
+                    mob.update();
                 }
             }
         }
@@ -117,24 +122,39 @@ public class GamePanel extends JPanel implements Runnable {
             // tiles
             tileManager.draw(g2);
 
-            // items
-            for (SuperItem item : items) {
-                if (item != null) {
-                    item.draw(g2);
-                }
+            makeEntityList();
+
+            // Sort entities
+            entityList.sort(Comparator.comparingInt(e -> e.worldY));
+
+            for (Entity entity : entityList) {
+                entity.draw(g2);
             }
 
-            // entities
-            for (Entity entity : entities) {
-                if (entity != null) {
-                    entity.draw(g2);
-                }
-            }
-
-            player.draw(g2);
+            emptyEntityList();
         }
 
         // ui
         ui.draw(g2);
+    }
+
+    public void makeEntityList() {
+        entityList.add(player);
+
+        for (Entity item : items) {
+            if (item != null) {
+                entityList.add(item);
+            }
+        }
+
+        for (Entity mob : mobs) {
+            if (mob != null) {
+                entityList.add(mob);
+            }
+        }
+    }
+
+    public void emptyEntityList() {
+        entityList.clear();
     }
 }
